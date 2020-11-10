@@ -3,7 +3,7 @@
 """
 
 import os 
-
+import glob
 
 """
     return true if the path contains a file or a directory
@@ -32,3 +32,8 @@ def delete(path):
             os.rmdir(path)
     else:
         print("File/Folder {} doesnt exist".format(path))
+
+
+def get_files_recursively(path):
+    return glob.glob('{}/**/*'.format(path), recursive=True)
+        
