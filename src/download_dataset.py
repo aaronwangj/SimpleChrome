@@ -12,9 +12,12 @@ from src.util import exists, mkdir, delete
 
 
 def download_dataset(download_path='dataset/'):
+    '''
+        An ideally hidden function that downloads the dataset in case its not locally available.
+        @params <string> download_path, where to download the dataset
+                        defaults to 'dataset/'
+    '''
     filename = '{}{}'.format(download_path, BASE_DATA_SET_LINK.split('/')[-1])
-
-
     response = requests.get(BASE_DATA_SET_LINK, stream=True)
 
     with tqdm.wrapattr(open(filename, "wb"), "write", miniters=1,
@@ -29,6 +32,10 @@ def download_dataset(download_path='dataset/'):
 
 
 def decompress_dataset(dataset):
+    '''
+        Decompresses a (tar.gz) file in the same directory
+        @params <string> dataset, path to the tar.gz compressed file
+    '''
     if exists(dataset):
         decompression_directory = '/'.join(dataset.split('/')[:-1])
         tar = tarfile.open(dataset, "r:gz")
@@ -39,6 +46,13 @@ def decompress_dataset(dataset):
         return
 
 def check_if_dataset_exists(dataset_path='dataset/'):
+    '''
+        A wraper function which checks if the dataset set exists, if it doesnt
+        downloads and decompresses it. 
+        @params <string> dataset_path path where to download the dataset
+                         defaults to 'dataset/' 
+    '''
+    
     if not exists(dataset_path):
         print("Downloading Dataset!")
         mkdir(dataset_path)
@@ -48,11 +62,6 @@ def check_if_dataset_exists(dataset_path='dataset/'):
         print("Decompression Complete!")
     else:
         print("Dataset already exists in directory {}".format(dataset_path))
-    
-
-
-
-
 
 
 
