@@ -7,6 +7,7 @@ import os
 import argparse
 import sys
 import pickle
+import matplotlib.pyplot as plt
 
 
 
@@ -51,9 +52,27 @@ v = tf.convert_to_tensor(temp, dtype = 'float32')
 vae = VAE(z_dim, u, v, lamb)
 
 
+
+def visualize_loss(losses): 
+    """
+    Uses Matplotlib to visualize the losses of our model.
+    :param losses: list of loss data stored from train. Can use the model's loss_list 
+    field 
+    :return: doesn't return anything, a plot should pop-up 
+    """
+    x = [i for i in range(len(losses))]
+    plt.plot(x, losses)
+    plt.title('Loss per batch')
+    plt.xlabel('Batch')
+    plt.ylabel('Loss')
+    plt.show()  
+
+
+
 #train function
 def train(vae, train_x, batch_size, epoch):
     nbatch = round(train_x.shape[0]/batch_size)
+    loss_list = []
     for i in range(nbatch):
         temp_id = batch_size*i + np.array(range(batch_size))
         batch = train_x[np.min(temp_id):(np.max(temp_id)+1), :]
@@ -63,16 +82,23 @@ def train(vae, train_x, batch_size, epoch):
         gradients = tape.gradient(loss, vae.trainable_variables)
         vae.optimizer.apply_gradients(zip(gradients, vae.trainable_variables))
         tf.cast(loss, tf.float32)
-        print("Current Loss: {0:.2f}".format(loss))
+        print("Current Loss: {0:.6f}".format(loss))
+        loss_list.append(loss)
         # all_loss.append([rec, kl, loss])
         # #save trained model
         # if iteration % 1000 == 0:
         #     vae.save_weights(filepath = 'trained_models/vae_'+str(vae.lamb)+'_'+str(epoch)+'_'+str(iteration)+'.h5')
         #     print('**** LOSS: %g ****' % loss)
-for epoch in range(70):
+    return loss_list
+
+total_losses = []
+
+for epoch in range(5):
     vae.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001*0.995**(epoch), beta_1=0.9, beta_2 = 0.999)
-    print('========================== EPOCH %d  ==========================' % epoch)
-    train(vae, train_x, batch_size, epoch)
+    print('========================== EPOCH %d  ==========================' % epoch+1)
+    total_losses += train(vae, train_x, batch_size, epoch)
+    
+visualize_loss(total_losses)
 
 
 
