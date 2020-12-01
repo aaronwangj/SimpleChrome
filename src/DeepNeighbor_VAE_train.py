@@ -11,7 +11,7 @@ import pickle
 
 
 #load in data
-train_data = np.loadtxt('data/E003/classification/train.csv', delimiter = ',')
+train_data = np.loadtxt('C:/Users/aaronjw/Desktop/GitHub/DeepNeighbors/dataset/data/E003/classification/train.csv', delimiter = ',')
 train_x = []
 train_y = []
 for i in range(6601):
@@ -62,7 +62,8 @@ def train(vae, train_x, batch_size, epoch):
             rec, kl, loss = vae.loss(means, logvar, batch, outputs)
         gradients = tape.gradient(loss, vae.trainable_variables)
         vae.optimizer.apply_gradients(zip(gradients, vae.trainable_variables))
-        print('loss', loss)
+        tf.cast(loss, tf.float32)
+        print("Current Loss: {0:.2f}".format(loss))
         # all_loss.append([rec, kl, loss])
         # #save trained model
         # if iteration % 1000 == 0:
