@@ -1,44 +1,83 @@
+# Each file contains a part of the model
+
 from __future__ import absolute_import
 import numpy as np
 import tensorflow_probability as tfp
 import tensorflow as tf
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, Flatten, Conv2D, BatchNormalization, LeakyReLU, Reshape, Conv2DTranspose, ReLU
+
+
+
 class Encoder(tf.keras.Model):
     """
-    encoder model
+    Encode model with 2 conv blocks followed by a single diverging Dense layer
     """
-    def __init__(self, z_dim):
+    def __init__(self, _z_dim, _first_conv_size=64, _second_conv_size=128):
         super(Encoder, self).__init__()
-        # z_dim
-        self.z_dim = z_dim
-        # Initialize weights and biases
-        self.c1 = tf.keras.layers.Conv2D(64, (5,5), strides = (2,2), padding = "SAME", use_bias = False, kernel_initializer = tf.keras.initializers.RandomNormal(mean = 0.0, stddev = 0.02))
-        self.b1 = tf.keras.layers.BatchNormalization()
-        self.r1 = tf.keras.layers.ReLU()
-        self.c2 = tf.keras.layers.Conv2D(128, (5,5), strides = (2,2), padding = "SAME", use_bias = False, kernel_initializer = tf.keras.initializers.RandomNormal(mean = 0.0, stddev = 0.02))
-        self.b2 = tf.keras.layers.BatchNormalization()
-        self.r2 = tf.keras.layers.ReLU()
-        self.f3 = tf.keras.layers.Flatten()
-        self.f4 = tf.keras.layers.Dense(self.z_dim)
-        self.f5 = tf.keras.layers.Dense(self.z_dim)
-        """
-        """
+        # Setting up hyper parameters
+        self.z_dim = _z_dim
+        self.first_conv_size = _first_conv_size
+        self.second_conv_size = _second_conv_size 
+        self.first_conv_strides = (2,2)
+        self.second_conv_strides = (2,2)
+        self.first_conv_kernel = (5,5)
+        self.second_conv_kernel = (5,5)
+        
+        # Variable Initializer
+        self.weight_initializer = tf.keras.RandomNormal(mean=0.0, stddev=0.02)
+        
+
+        # Setup Model Layers
+        
+        # First Convolutional Block
+        self.conv_1 = tf.keras.layers.Conv2D(self.first_conv_size, 
+                                        self.first_conv_kernel, 
+                                        strides = self.first_conv_strides, 
+                                        padding = "SAME", 
+                                        use_bias = False, 
+                                        kernel_initializer = self.weight_initializer
+                                    )
+        
+        self.batch_norm_1 = tf.keras.layers.BatchNormalization()
+        self.relu_1 = tf.keras.layers.ReLU()
+
+        # Second Convolutional Block
+        self.conv_2 = tf.keras.layers.Conv2D(self.second_conv_size,
+                                             self.second_conv_kernel, 
+                                             strides = self.second_conv_strides, 
+                                             padding = "SAME", 
+                                             use_bias = False, 
+                                             kernel_initializer = self.weight_initializer
+                                            )
+        self.batch_norm_2 = tf.keras.layers.BatchNormalization()
+        self.relu_2 = tf.keras.layers.ReLU()
+        
+        
+        # Flatten for subsequent Dense layers
+        self.flatten = tf.keras.layers.Flatten()
+        
+        # Dense for Means
+        self.dense_means = tf.keras.layers.Dense(self.z_dim)
+        
+        # Dense for Std
+        self.dense_std = tf.keras.layers.Dense(self.z_dim)
+
     def call(self, inputs):
         """
-        pass inputs
+        Call function for Encoder Model
+        @params self <Object>, passed by default the model object itself
+        @params inputs <np.array>, the batch or single input that needs to passed through this model
+        @returns <np.array>, <np.array> both with sizes (batch, 1)
         """
-        inputs = self.c1(inputs)
-        inputs = self.b1(inputs)
-        inputs = self.r1(inputs)
-        inputs = self.c2(inputs)
-        inputs = self.b2(inputs)
-        inputs = self.r2(inputs)
-        inputs = self.f3(inputs)
-        means = self.f4(inputs)
-        logvar = self.f5(inputs)
-        return means, logvar
+        conv_block_1_output = self.relu_1(self.batch_norm_1(self.conv_1(inputs)))
+        conv_block_2_output = self.relu_2(self.batch_norm_2(self.conv_2(conv_block_1_output)))
+        flattened = self.flatten(conv_block_2_output)
+        means = self.dense_means(flattened)
+        std = self.dense_std(flattened)
 
+        return means, std
+        
 
 
 
@@ -115,7 +154,7 @@ class VAE(tf.keras.Model):
         return means, logvar, outputs
         """
         """
-    def loss(self, means, logvar, inputs,outputs):
+    def loss(self, means, logvar, inputs, outputs):
         #reconstruction loss
         rec = tf.reduce_mean(tf.square(outputs - inputs))
         #kl loss

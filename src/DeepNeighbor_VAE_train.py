@@ -1,4 +1,4 @@
-from DeepNeighbor_VAE import *
+from models.DeepNeighbor_VAE import *
 from math import *
 import tensorflow_hub as hub
 # import tensorflow_gan as tfgan
