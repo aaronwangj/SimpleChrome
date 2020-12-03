@@ -1,58 +1,27 @@
 from src import download_dataset, parse
 from models import MLP_Simple, DeepChrome, AttentiveChrome
-import numpy as np
-from sklearn.model_selection import train_test_split
-# import tensorflow as tf
-# from tensorflow.keras import Sequential
-# from tensorflow.keras.layers import Dense
-
-
+from src.evaluation import evaluate_model
 
 download_dataset.check_if_dataset_exists()
 
-gene_data, gene_ids = parse.parse_all_cell_files('dataset/data/E100')
+# Train a Simple MLP model
+simple_model = MLP_Simple.MLP_Simple()
+X_train, X_test, Y_train, Y_test = simple_model.parse_dataset('dataset/data/E100')
+simple_model.compile()
+simple_model.fit(X_train, Y_train)
 
-x_data = np.zeros((len(gene_ids), 100, 5), dtype='float32')
-y_data = np.zeros((len(gene_ids), 1), dtype='float32')
-
-
-for x, gene_id in enumerate(gene_ids):
-    hm_matrix, expression = parse.get_gene_data(gene_data, gene_id)
-    x_data[x] = np.array(hm_matrix) 
-    y_data[x] = np.array(expression) 
-
-
-X_train, X_test, Y_train, Y_test = train_test_split(x_data, y_data, test_size=0.33)
-
-print(X_train.shape, Y_train.shape)
-
-# mlp_model = DeepChrome.DeepChrome()
-# mlp_model.compile()
-# mlp_model.fit(X_train, Y_train)
-
-# print(mlp_model.evaluate(X_test, Y_test))
-
-attentive_chrome = AttentiveChrome.AttentiveChrome()
+print("MLP\n", evaluate_model(simple_model, X_test, Y_test))
 
 
 
-# model = Sequential()
+# Train DeepChrome
+deepchome_model = DeepChrome.DeepChrome()
+X_train, X_test, Y_train, Y_test = deepchome_model.parse_dataset('dataset/data/E100')
+deepchome_model.compile()
+deepchome_model.fit(X_train, Y_train)
 
-# model.add(Dense(128, activation='relu', kernel_initializer='he_normal', input_shape=(500,)))
-# model.add(Dense(128, activation='relu', kernel_initializer='he_normal'))
-# model.add(Dense(1, activation='sigmoid'))
+print("DeepChrome\n", evaluate_model(deepchome_model, X_test, Y_test))
 
-# model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-# model.fit(X_train, Y_train, epochs=100, batch_size=32, validation_split=0.2, verbose=1)
-# loss, acc = model.evaluate(X_test, Y_test, verbose=1)
-# print('Test Accuracy: %.3f' % acc)
-
-
-
-# for x, gene_id in enumerate(gene_ids):
-    
-#     i,j = parse.get_neighbors_data(gene_data, gene_id, gene_ids).shape
-
-#     if i != 2100:
-#         print(gene_id, i, j)
+# Train Attentive Chrome
+# attentive_chrome = AttentiveChrome.AttentiveChrome()
     
