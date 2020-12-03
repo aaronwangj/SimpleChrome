@@ -79,13 +79,6 @@ class Encoder(tf.keras.Model):
         return means, std
         
 
-
-
-
-
-
-
-
 class Decoder(tf.keras.Model):
     """
     decoder model
@@ -119,9 +112,6 @@ class Decoder(tf.keras.Model):
         return outputs
         """
         """
-
-
-
 
 
 
