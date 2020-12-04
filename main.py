@@ -2,7 +2,7 @@ from src import download_dataset, parse
 from models import MLP_Simple, DeepChrome, DeepNeighbor_VAE
 from src.evaluation import evaluate_model
 
-download_dataset.check_if_dataset_exists()
+# download_dataset.check_if_dataset_exists()
 
 X_train, X_test, Y_train, Y_test = parse.create_dataset('dataset/data/E100')
 
