@@ -25,7 +25,7 @@ class MLP_Simple(tf.keras.Model):
         self.loss = _loss
         
         self.model = Sequential()
-        
+        self.model.add(Flatten())
         self.model.add(Dense(_first_layer_size, activation='relu', 
                             kernel_initializer='he_normal', 
                             input_shape=(_input_shape,)))
@@ -43,7 +43,7 @@ class MLP_Simple(tf.keras.Model):
         )
     
     def fit(self, X_train, Y_train,
-            epochs=1, batch_size=32, validation_split=0.1):
+            epochs=5, batch_size=32, validation_split=0.1):
         
         self.model.fit(X_train, Y_train,
                 epochs=epochs, batch_size=batch_size, 

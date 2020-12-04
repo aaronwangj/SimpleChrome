@@ -36,6 +36,8 @@ def auroc(targets, predictions):
 
 
 def evaluate_model(model, X_test, Y_test):
+    print(np.mean(model.call(X_test).numpy()))
+    
     _, aupr_array = aupr(Y_test, model.call(X_test))
     _, auroc_array = auroc(Y_test, model.call(X_test))
     _, test_accuracy = model.evaluate(X_test, Y_test)

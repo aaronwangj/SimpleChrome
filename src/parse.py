@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from src.util import exists, get_files_recursively
 import os
+from sklearn.model_selection import train_test_split
 
 def create_empty_dataframe():
     return pd.DataFrame({ 'GeneID' : pd.Series([], dtype=np.int32), 
@@ -73,13 +74,32 @@ def get_neighbors_data(gene_data, gene_id, gene_ids, N=10):
         return np.array([[]])
 
 
-
-
-
-
-
-
-
+def create_dataset(path='dataset/data/E100', test_size=0.33):
+    gene_data, gene_ids = parse_all_cell_files(path)
+    
+    
+    x_data = np.zeros((len(gene_ids), 100, 5), dtype='float32')
+    y_data = np.zeros((len(gene_ids), 1), dtype='float32')
+    
+    
+    for x, gene_id in enumerate(gene_ids):
+        hm_matrix, expression = get_gene_data(gene_data, gene_id)
+        x_data[x] = np.array(hm_matrix) 
+        y_data[x] = np.array(expression)
+    
+    max_vals = np.max(np.max(x_data, axis = 1), axis = 0)
+    
+    x_data = np.asarray(x_data, dtype = 'float32')
+    
+    for idx, max_val in enumerate(max_vals):
+        x_data[:,:,idx] /= max_val
+     
+    x_data*=2
+    x_data-=1
+    
+    
+    X_train, X_test, Y_train, Y_test = train_test_split(x_data, y_data, test_size=0.33)
+    return X_train, X_test, Y_train, Y_test
 
 
 
