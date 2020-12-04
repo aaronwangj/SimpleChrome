@@ -37,8 +37,11 @@ Step 3: Install the dependencies.
 
 ## Whats Done:
 - Data parsing for all cells 
+- Implement VAE module
+- Translate DeepChrome to tensorflow so that it can be integrated with our eventual VAE module
+- Evaluation
 
 ## TODOs:
-- Translate DeepChrome and AttentiveChrome to tensorflow so that it can be integrated with our eventual VAE module
-- Implement VAE module
-- Evaluation
+- Translate AttentiveChrome to tensorflow so that it can be integrated with our eventual VAE module
+- Final Write-up
+
