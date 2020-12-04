@@ -4,16 +4,33 @@
 from __future__ import absolute_import
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 from tensorflow.keras import Model
 from tensorflow.keras.layers import InputLayer, Conv1D, Flatten, Dense, Reshape, Conv1DTranspose
 from tensorflow.keras.initializers import RandomNormal
+from tensorflow.python.keras.layers.advanced_activations import LeakyReLU
 from sklearn.model_selection import train_test_split
+
+
+def visualize_loss(losses): 
+    """
+    Uses Matplotlib to visualize the losses of our model.
+    :param losses: list of loss data stored from train. Can use the model's loss_list 
+    field 
+    :return: doesn't return anything, a plot should pop-up 
+    """
+    x = [i for i in range(len(losses))]
+    plt.plot(x, losses)
+    plt.title('Loss per batch')
+    plt.xlabel('Batch')
+    plt.ylabel('Loss')
+    plt.show()  
+
 
 class VAE(tf.keras.Model):
     """
         Variational AutoEncoder Module
     """
-
     def __init__(self, _latent_dim=2, _input_shape=(100, 5, 1), 
                  _encoder_filters=[32, 64], 
                  _encoder_kernel_sizes=[5, 5],
@@ -30,6 +47,7 @@ class VAE(tf.keras.Model):
         self.latent_dim = _latent_dim
         self.weight_initializer = RandomNormal(mean = 0.0, stddev = 0.02)
         self.lamb = 0.00005
+        self.leaky = LeakyReLU(alpha=0.7)
         # Encoder Hyper Parameters
         self.encoder_filters = _encoder_filters
         self.encoder_kernel_sizes = _encoder_kernel_sizes
@@ -49,20 +67,20 @@ class VAE(tf.keras.Model):
                 Conv1D( filters=self.encoder_filters[0], 
                     kernel_size=self.encoder_kernel_sizes[0], 
                     strides=self.encoder_strides[0], 
-                    activation='relu',
                     padding='SAME',
                     use_bias = self.encoder_use_bias, 
                     kernel_initializer = self.weight_initializer,
                     input_shape=_input_shape
                 ),
+                self.leaky,
                 Conv1D( filters=self.encoder_filters[1], 
                     kernel_size=self.encoder_kernel_sizes[1], 
                     strides=self.encoder_strides[1], 
-                    activation='relu',
                     padding='SAME',
                     use_bias = self.encoder_use_bias, 
                     kernel_initializer = self.weight_initializer
                 ),
+                self.leaky,
                 Flatten(),
                 Dense(self.latent_dim + self.latent_dim),
             ]
@@ -71,24 +89,25 @@ class VAE(tf.keras.Model):
         self.decoder = tf.keras.Sequential(
             [
                 InputLayer(input_shape=(self.latent_dim,)),
-                Dense(units=100*64, activation=tf.nn.relu),
+                Dense(units=100*64),
+                self.leaky,
                 Reshape(target_shape=(100, 64)),
                 Conv1DTranspose(filters=self.decoder_filters[0],
                     kernel_size=self.decoder_kernel_sizes[0], 
                     strides=self.decoder_strides[0], 
                     padding='SAME',
-                    activation='relu',
                     use_bias = self.decoder_use_bias, 
                     kernel_initializer = self.weight_initializer
                 ),
+                self.leaky,
                 Conv1DTranspose(filters=self.decoder_filters[1],
                     kernel_size=self.decoder_kernel_sizes[1], 
                     strides=self.decoder_strides[1], 
                     padding='SAME',
-                    activation='relu',
                     use_bias = self.decoder_use_bias, 
                     kernel_initializer = self.weight_initializer
                 ),
+                self.leaky,
                 Conv1DTranspose(filters=5, 
                     kernel_size=1, 
                     strides=1, 
@@ -155,9 +174,10 @@ class VAE(tf.keras.Model):
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
         return loss
 
-    def fit(self, X_data, batch_size=64, epochs=10):
+    def fit(self, X_data, batch_size=64, epochs=1):
         X_train, X_valid = train_test_split(X_data, test_size=0.1)
         
+        loss_list = []
         for epoch in range(epochs):
 
             nbatch = round(X_train.shape[0]/batch_size)
@@ -166,7 +186,10 @@ class VAE(tf.keras.Model):
                 temp_id = batch_size*i + np.array(range(batch_size))
                 batch = X_train[np.min(temp_id):(np.max(temp_id)+1), :]
                 batch_loss = self.train_step(batch)
+                loss_list.append(batch_loss)
                 print("Batch: {}\nBatch Loss: {}".format(i, batch_loss))
+        print('Final Loss: {}\n Average Loss: {}'.format(loss_list[-1], np.mean(loss_list)))
+        visualize_loss(loss_list)
 
             # validation_loss = 
 
