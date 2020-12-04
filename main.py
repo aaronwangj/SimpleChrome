@@ -22,7 +22,7 @@ deepchome_model.compile()
 deepchome_model.fit(X_train, Y_train)
 print("DeepChrome\n", evaluate_model(deepchome_model, X_test, Y_test))
 
-vae = DeepNeighbor_VAE.VAE(_latent_dim=2)
+vae = DeepNeighbor_VAE.VAE(_latent_dim=10)
 vae.fit(X_train)
 
 

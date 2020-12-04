@@ -7,6 +7,8 @@ import tensorflow as tf
 from tensorflow.keras import Model
 from tensorflow.keras.layers import InputLayer, Conv1D, Flatten, Dense, Reshape, Conv1DTranspose
 from tensorflow.keras.initializers import RandomNormal
+from tensorflow.python.keras.layers.advanced_activations import LeakyReLU
+from tensorflow.python.ops.gen_nn_ops import leaky_relu
 from sklearn.model_selection import train_test_split
 
 class VAE(tf.keras.Model):
@@ -14,7 +16,7 @@ class VAE(tf.keras.Model):
         Variational AutoEncoder Module
     """
 
-    def __init__(self, _latent_dim=2, _input_shape=(100, 5, 1), 
+    def __init__(self, _latent_dim=10, _input_shape=(100, 5, 1), 
                  _encoder_filters=[32, 64], 
                  _encoder_kernel_sizes=[5, 5],
                  _encoder_strides=[1, 1],
@@ -28,6 +30,7 @@ class VAE(tf.keras.Model):
         super(VAE, self).__init__()
         # Shared Hyper Parameters
         self.latent_dim = _latent_dim
+        self.leaky_relu = LeakyReLU(alpha = 0.5)
         self.weight_initializer = RandomNormal(mean = 0.0, stddev = 0.02)
         self.lamb = 0.00005
         # Encoder Hyper Parameters
@@ -49,20 +52,20 @@ class VAE(tf.keras.Model):
                 Conv1D( filters=self.encoder_filters[0], 
                     kernel_size=self.encoder_kernel_sizes[0], 
                     strides=self.encoder_strides[0], 
-                    activation='relu',
                     padding='SAME',
                     use_bias = self.encoder_use_bias, 
                     kernel_initializer = self.weight_initializer,
                     input_shape=_input_shape
                 ),
+                self.leaky_relu,
                 Conv1D( filters=self.encoder_filters[1], 
                     kernel_size=self.encoder_kernel_sizes[1], 
                     strides=self.encoder_strides[1], 
-                    activation='relu',
                     padding='SAME',
                     use_bias = self.encoder_use_bias, 
                     kernel_initializer = self.weight_initializer
                 ),
+                self.leaky_relu,
                 Flatten(),
                 Dense(self.latent_dim + self.latent_dim),
             ]
@@ -71,24 +74,25 @@ class VAE(tf.keras.Model):
         self.decoder = tf.keras.Sequential(
             [
                 InputLayer(input_shape=(self.latent_dim,)),
-                Dense(units=100*64, activation=tf.nn.relu),
+                Dense(units=100*64),
+                self.leaky_relu,
                 Reshape(target_shape=(100, 64)),
                 Conv1DTranspose(filters=self.decoder_filters[0],
                     kernel_size=self.decoder_kernel_sizes[0], 
                     strides=self.decoder_strides[0], 
                     padding='SAME',
-                    activation='relu',
                     use_bias = self.decoder_use_bias, 
                     kernel_initializer = self.weight_initializer
                 ),
+                self.leaky_relu,
                 Conv1DTranspose(filters=self.decoder_filters[1],
                     kernel_size=self.decoder_kernel_sizes[1], 
                     strides=self.decoder_strides[1], 
                     padding='SAME',
-                    activation='relu',
                     use_bias = self.decoder_use_bias, 
                     kernel_initializer = self.weight_initializer
                 ),
+                self.leaky_relu,
                 Conv1DTranspose(filters=5, 
                     kernel_size=1, 
                     strides=1, 
