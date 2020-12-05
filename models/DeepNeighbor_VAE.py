@@ -11,12 +11,14 @@ from tensorflow.python.keras.layers.advanced_activations import LeakyReLU
 from tensorflow.python.ops.gen_nn_ops import leaky_relu
 from sklearn.model_selection import train_test_split
 
+
 class VAE(tf.keras.Model):
     """
         Variational AutoEncoder Module
     """
 
-    def __init__(self, _latent_dim=10, _input_shape=(100, 5, 1), 
+    def __init__(self, _latent_dim=10, 
+                 _input_shape=(100, 5, 1), 
                  _encoder_filters=[32, 64], 
                  _encoder_kernel_sizes=[5, 5],
                  _encoder_strides=[1, 1],
@@ -158,23 +160,26 @@ class VAE(tf.keras.Model):
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
         return loss
 
-    def fit(self, X_data, batch_size=64, epochs=10):
+    def fit(self, X_data, batch_size=64, epochs=5):
         X_train, _ = train_test_split(X_data, test_size=0.1)
         
         for epoch in range(epochs):
 
             nbatch = round(X_train.shape[0]/batch_size)
-            loss_list = []
             for i in range(nbatch):
                 temp_id = batch_size*i + np.array(range(batch_size))
                 batch = X_train[np.min(temp_id):(np.max(temp_id)+1), :]
-                batch_loss = self.train_step(batch)
-                print("Batch: {}\nBatch Loss: {}".format(i, batch_loss))
-
+                _ = self.train_step(batch)
+            
+            print("Epoch {} done!".format(epoch))    
             # validation_loss = 
-
-
-
+    
+    def generate_encoded(self, x):
+        #return self.encoder(x)
+        mean, logvar = self.encode(x)
+        z = self.reparameterize(mean, logvar)
+        return z
+    
 # class Encoder(tf.keras.Model):
 #     """
 #     Encode model with 2 conv blocks followed by a single diverging Dense layer
