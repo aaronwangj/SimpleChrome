@@ -143,7 +143,6 @@ class VAE(tf.keras.Model):
         x_logit = self.decode(z)
         cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
         logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2])
-        print(logpx_z.shape)
         logpz = self.log_normal_pdf(z, 0., 0.)
         logqz_x = self.log_normal_pdf(z, mean, logvar)
         return -tf.reduce_mean(logpx_z + logpz - logqz_x)
@@ -156,7 +155,7 @@ class VAE(tf.keras.Model):
         return loss
 
     def fit(self, X_data, batch_size=64, epochs=10):
-        X_train, X_valid = train_test_split(X_data, test_size=0.1)
+        X_train, _ = train_test_split(X_data, test_size=0.1)
         
         for epoch in range(epochs):
 
